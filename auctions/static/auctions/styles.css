@@ -1,3 +1,15 @@
 body {
     padding: 10px;
+    margin: 10px;
+    left: 3%;
+    right: 3%;
+}
+
+.card {
+    flex-direction: row;
+}
+
+
+textarea .form-control {
+    height: 30%;
 }

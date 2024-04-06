@@ -3,12 +3,32 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django import forms
 
-from .models import User
+from .models import User, Listing
+
+class ListingForm(forms.ModelForm):
+    class Meta:
+        model = Listing
+        fields = ["title", "description", "starting_bid", "url"]
+        
+        widgets = {
+            "title" : forms.TextInput(attrs={"class":"form-control"}),
+            "description" : forms.Textarea(attrs={"class":"form-control"}),
+            "starting_bid": forms.NumberInput(attrs={"class":"form-control"}),
+            "url": forms.URLInput(attrs={"label": "URL","class":"form-control"}),
+        }
+
+    def __inti__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    listings = Listing.objects.all()
+
+    return render(request, "auctions/index.html", {
+        "listings": listings,
+    })
 
 
 def login_view(request):
@@ -61,3 +81,28 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+    
+def create_listing(request):
+    if request.method == "POST":
+        form = ListingForm(request.POST)
+
+        if form.is_valid():
+            instances = form.save()
+
+        return HttpResponseRedirect(reverse("index"))
+
+    else:
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse("login"))
+        else:
+            return render(request, "auctions/create_listing.html", {
+                "form": ListingForm(),
+            })
+
+
+def listing(request, listing_id):
+    listing = Listing.objects.get(pk=listing_id)
+
+    return render(request, "auctions/listing.html", {
+        "listing": listing,
+    })

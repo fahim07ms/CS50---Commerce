@@ -1,0 +1,30 @@
+{% extends "auctions/layout.html" %}
+
+{% block title %}{{ listing.title }}{% endblock %}
+
+{% block body %}
+
+    <h2>Listing: {{ listing.title }}</h2>
+    <button class="btn btn-secondary">Watchlist</button>
+    <img src="{{ listing.url }}" class="rounded mx-auto d-block" alt="{{ listing.description }}">
+    <p>{{ listing.description }}</p>
+
+    <h4>${{ listing.starting_bid }}</h4>
+
+    <div class="form-group">
+        <form method="POST" action="#">
+            <small>No bid so far.</small>
+            <input type="number" class="form-control" name="bid" placeholder="Bid">
+            <button style="margin-top:10px;" type="submit" class="btn btn-primary">Place Bid</button>        
+        </form>
+    </div>
+
+    <h4>Details</h4>
+    <ul>
+        <li>Listed by: </li>
+        <li>Category: </li>
+    </ul>
+
+
+
+{% endblock %}
