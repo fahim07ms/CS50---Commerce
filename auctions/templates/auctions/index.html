@@ -4,12 +4,17 @@
     <h2>Active Listings</h2>
 
     {% for listing in listings %}
-        <div class="card" style="width: 90%; height: 50%;">
+        <div class="card" style="width: 90%; height: 50%; margin: 12px auto;">
             <img src="{{ listing.url }}" class="card-img-top" alt="{{ listing.title }}" style="width: 40%;">
             <div class="card-body">
                 <h5 class="card-title">{{ listing.title }}</h5>
                 <p class="card-text">{{ listing.description }}</p>
-                <p class="card-text">Price: ${{ listing.starting_bid }}</p>
+                {% if listing.current_bid %}
+                    <p class="card-text">Price: ${{ listing.current_bid }}</p> 
+                {% else %}
+                    <p class="card-text">No bid placed. Starting bid: ${{ listing.starting_bid }}</p>
+                {% endif %}
+
                 <p class="card-text">Created: {{ listing.dateCreated }}</p>
                 <a href="{% url 'listing' listing.id %}" class="btn btn-primary">Show More</a>
             </div>

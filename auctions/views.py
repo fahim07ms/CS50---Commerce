@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django import forms
 
-from .models import User, Listing
+from .models import *
 
 class ListingForm(forms.ModelForm):
     class Meta:
@@ -105,4 +105,51 @@ def listing(request, listing_id):
 
     return render(request, "auctions/listing.html", {
         "listing": listing,
+        "comments": listing.product_comments.all(),
     })
+
+def bid(request, listing_id):
+    if request.method == "POST":
+        user = User.objects.get(pk=int(request.POST["user_id"]))
+        listing = Listing.objects.get(pk=listing_id)
+        amount = int(request.POST["bid"])
+
+        c_bid = listing.current_bid
+
+        if (c_bid is None and amount >= listing.starting_bid) or (amount > c_bid):
+            bid = Bid(person=user, listing=listing, amount=amount)
+            bid.save()
+
+            listing.current_bid = amount
+            listing.save()
+
+            return render(request, "auctions/listing.html", {
+                "listing": listing,
+                "message": "Bid placed."
+            })
+
+        if c_bid is not None: 
+            message = "Less than current bid!"
+        else:
+            message = "Less than starting bid!"
+
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "message": message,
+        })
+    
+    return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+
+
+def comment(request, listing_id):
+    if request.method == "POST":
+        user = User.objects.get(pk=int(request.POST["user_id"]))
+        listing = Listing.objects.get(pk=listing_id)
+        text = request.POST["comment"]
+
+        comment = Comment(person=user, listing=listing, comment=text)
+        comment.save()
+
+        return HttpResponseRedirect(reverse("listing", kwargs={
+            "listing_id": listing_id,
+        }))

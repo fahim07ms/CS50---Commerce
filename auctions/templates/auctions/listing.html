@@ -9,11 +9,20 @@
     <img src="{{ listing.url }}" class="rounded mx-auto d-block" alt="{{ listing.description }}">
     <p>{{ listing.description }}</p>
 
-    <h4>${{ listing.starting_bid }}</h4>
+    {% if listing.current_bid %}
+        <h4>Price: ${{ listing.current_bid }}</h4>
+    {% else %}
+        <h4>Starting Bid: ${{ listing.starting_bid }}</h4>
+    {% endif %}
 
+    <br>
+
+    <h3>Place Bid</h3>
     <div class="form-group">
-        <form method="POST" action="#">
+        <form method="POST" action="{% url 'bid' listing.id %}">
+            {% csrf_token %}
             <small>No bid so far.</small>
+            <input type="hidden" name="user_id" value="{{ request.user.id }}">
             <input type="number" class="form-control" name="bid" placeholder="Bid">
             <button style="margin-top:10px;" type="submit" class="btn btn-primary">Place Bid</button>        
         </form>
@@ -25,6 +34,32 @@
         <li>Category: </li>
     </ul>
 
+    <h3>Comments</h3>
+    
+    {% for comment in comments %}
+    <div class="card" style="width: 90%; margin: 10px auto;">
+        <div class="card-body">
+          <h5 class="card-subtitle mb-2">{{ comment.person }}</h5>
+          <p class="card-text">{{ comment.comment }}</p>
+          <small class="text-body-secondary">{{ comment.dateCommented }}</small>
+        </div>
+      </div>
+    {% empty %}
+        <div>
+            
+        </div>
+    {% endfor %}
+
+
+    <hr>
+    <div class="form-group">
+        <form method="POST" action="{% url 'comment' listing.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ request.user.id }}">
+            <input type="textarea" class="form-control" name="comment" placeholder="Your Comment...">
+            <button style="margin-top:10px;" type="submit" class="btn btn-primary">Post</button>        
+        </form>
+    </div>
 
 
 {% endblock %}
