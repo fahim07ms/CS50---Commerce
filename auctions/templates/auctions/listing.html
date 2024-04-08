@@ -4,9 +4,40 @@
 
 {% block body %}
 
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>{{ message }}</strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>{{ message }}</strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% else %}
+                <div class="alert alert-error alert-dismissible fade show" role="alert">
+                    <strong>{{ message }}</strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <h2>Listing: {{ listing.title }}</h2>
-    <button class="btn btn-secondary">Watchlist</button>
-    <img src="{{ listing.url }}" class="rounded mx-auto d-block" alt="{{ listing.description }}">
+    <form method="POST" action="{% url 'watchlist' %}">
+        {% csrf_token %}
+        <input type="hidden" name="listing_id" value="{{ listing.id }}">
+        <button type="submit" class="btn btn-secondary">Watchlist</button>
+    </form>
+    <img src="{{ listing.url }}" class="rounded mx-auto d-block" style="width: 90%; margin: 8px auto;" alt="{{ listing.description }}">
     <p>{{ listing.description }}</p>
 
     {% if listing.current_bid %}
@@ -21,7 +52,16 @@
     <div class="form-group">
         <form method="POST" action="{% url 'bid' listing.id %}">
             {% csrf_token %}
-            <small>No bid so far.</small>
+            {% if total_bids == 0 %}
+                <small>No bid so far.</small>
+            {% else %}
+                <small>{{ total_bids }} bid(s) so far.</small>
+                {% if request.user == current_bidder %}
+                    <small>Your bid is current bid.</small>
+                {% else %}
+                    <small>{{ current_bidder }}'s bid is current bid.</small>
+                {% endif %}
+            {% endif %}
             <input type="hidden" name="user_id" value="{{ request.user.id }}">
             <input type="number" class="form-control" name="bid" placeholder="Bid">
             <button style="margin-top:10px;" type="submit" class="btn btn-primary">Place Bid</button>        
@@ -39,9 +79,9 @@
     {% for comment in comments %}
     <div class="card" style="width: 90%; margin: 10px auto;">
         <div class="card-body">
-          <h5 class="card-subtitle mb-2">{{ comment.person }}</h5>
-          <p class="card-text">{{ comment.comment }}</p>
-          <small class="text-body-secondary">{{ comment.dateCommented }}</small>
+          <h6 class="mb-2">@{{ comment.person }}</h6>
+          <p class="card-text">&nbsp&nbsp{{ comment.comment }}</p>
+          <small class="text-body-secondary">Posted: {{ comment.dateCommented }}</small>
         </div>
       </div>
     {% empty %}
@@ -56,7 +96,7 @@
         <form method="POST" action="{% url 'comment' listing.id %}">
             {% csrf_token %}
             <input type="hidden" name="user_id" value="{{ request.user.id }}">
-            <input type="textarea" class="form-control" name="comment" placeholder="Your Comment...">
+            <textarea class="form-control" name="comment" placeholder="Your Comment..."></textarea>
             <button style="margin-top:10px;" type="submit" class="btn btn-primary">Post</button>        
         </form>
     </div>

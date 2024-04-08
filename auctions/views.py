@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
+from django.contrib import messages
 
 from .models import *
 
@@ -103,9 +104,13 @@ def create_listing(request):
 def listing(request, listing_id):
     listing = Listing.objects.get(pk=listing_id)
 
+    print(messages)
+
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "comments": listing.product_comments.all(),
+        "total_bids": len(listing.product_bids.all()),
+        "current_bidder": listing.product_bids.get(amount=listing.current_bid).person,
     })
 
 def bid(request, listing_id):
@@ -123,20 +128,22 @@ def bid(request, listing_id):
             listing.current_bid = amount
             listing.save()
 
-            return render(request, "auctions/listing.html", {
-                "listing": listing,
-                "message": "Bid placed."
-            })
+            messages.success(request, "Bid placed successfully! Your bid is current bid.", extra_tags="success_bid")
+
+            return HttpResponseRedirect(reverse("listing", kwargs={
+                "listing_id": listing_id,
+            }))
 
         if c_bid is not None: 
-            message = "Less than current bid!"
+            message = "Your bid must be greater than current bid!"
         else:
-            message = "Less than starting bid!"
+            message = "Your bid must be equal or greater than starting bid!"
 
-        return render(request, "auctions/listing.html", {
-            "listing": listing,
-            "message": message,
-        })
+        messages.warning(request, message, extra_tags="fail_bid")
+
+        return HttpResponseRedirect(reverse("listing", kwargs={
+            "listing_id": listing_id,
+        }))
     
     return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
 
@@ -150,6 +157,32 @@ def comment(request, listing_id):
         comment = Comment(person=user, listing=listing, comment=text)
         comment.save()
 
+        messages.success(request, "Comment posted successfully!", extra_tags="success_comment")
+
         return HttpResponseRedirect(reverse("listing", kwargs={
             "listing_id": listing_id,
         }))
+    
+def watchlist(request):
+    if "watchlist" not in request.session:
+            request.session["watchlist"] = []
+
+    if request.method == "POST":
+        listing_id = int(request.POST["listing_id"])
+
+        if listing_id in request.session["watchlist"]:
+            messages.error(request, "Already in watchlist")
+        else:
+            request.session["watchlist"].append(listing_id)
+            messages.success(request, "Listing successfully added in watchlist!")
+
+        return HttpResponseRedirect(reverse("listing", args=(listing_id,)))
+    
+    if request.session["watchlist"] == []:
+        return render(request, "auctions/watchlist.html", {
+            "listings": []
+        })
+
+    return render(request, "auctions/watchlist.html", {
+        "listings": Listing.objects.filter(pk__in=request.session["watchlist"]),
+    })
