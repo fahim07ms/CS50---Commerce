@@ -21,7 +21,19 @@
                 <a class="nav-link" href="{% url 'index' %}">Active Listings</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Categories</a>
+                <div class="btn-group">
+                    <button type="button" class="btn dropdown-toggle text-primary" data-toggle="dropdown" aria-expanded="true">
+                      Categories
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for category in categories %}
+                            {% if category != "Others" %}
+                                <li><a class="dropdown-item" href="{% url 'categories' category %}">{{ category }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li><a class="dropdown-item" href="{% url 'categories' 'Others' %}">Others</a></li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'watchlist' %}">Watchlist</a>

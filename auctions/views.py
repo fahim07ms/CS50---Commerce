@@ -11,13 +11,14 @@ from .models import *
 class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing
-        fields = ["title", "description", "starting_bid", "url"]
+        fields = ["title", "description", "starting_bid", "url", "category"]
         
         widgets = {
             "title" : forms.TextInput(attrs={"class":"form-control"}),
             "description" : forms.Textarea(attrs={"class":"form-control"}),
             "starting_bid": forms.NumberInput(attrs={"class":"form-control"}),
             "url": forms.URLInput(attrs={"label": "URL","class":"form-control"}),
+            "category": forms.Select(attrs={"class":"form-control"})
         }
 
     def __inti__(self, *args, **kwargs):
@@ -106,11 +107,16 @@ def listing(request, listing_id):
 
     print(messages)
 
+    if listing.current_bid is None:
+        current_bidder = None
+    else:
+        current_bidder = listing.product_bids.get(amount=listing.current_bid).person
+
     return render(request, "auctions/listing.html", {
         "listing": listing,
         "comments": listing.product_comments.all(),
         "total_bids": len(listing.product_bids.all()),
-        "current_bidder": listing.product_bids.get(amount=listing.current_bid).person,
+        "current_bidder": current_bidder,
     })
 
 def bid(request, listing_id):
@@ -185,4 +191,14 @@ def watchlist(request):
 
     return render(request, "auctions/watchlist.html", {
         "listings": Listing.objects.filter(pk__in=request.session["watchlist"]),
+    })
+
+def categories(request, category):
+    print(category)
+    listings = Listing.objects.filter(category=category)
+    print(listings)
+
+    return render(request, "auctions/categories.html", {
+        "listings": listings,
+        "category": category,
     })

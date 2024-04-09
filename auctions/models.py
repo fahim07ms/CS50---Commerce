@@ -9,10 +9,20 @@ class User(AbstractUser):
 # one for auction listings, one for bids, and one for comments
 
 class Listing(models.Model):
+    CATEGORIES = {
+        "Others": "No Category",
+        "Broomstick": "Broomstick",
+        "Wand": "Wand",
+        "Cloak": "Cloak",
+        "Clothes": "Clothes",
+        "Hat": "Hat"
+    }
+    
     title = models.CharField(max_length=50)
     description = models.CharField(max_length=300)
     starting_bid = models.IntegerField()
-    url = models.URLField(blank=True)
+    url = models.URLField(blank=True) 
+    category = models.CharField(max_length=20, choices=dict(sorted(CATEGORIES.items())), default="None")
     dateCreated = models.DateTimeField(default=datetime.now, blank=True,)
     current_bid = models.IntegerField(default=None, null=True)
 
